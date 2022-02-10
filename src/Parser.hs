@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Parser where
 
 import Base
@@ -9,8 +11,18 @@ import Text.Megaparsec.Char.Lexer (symbol)
 
 type Parser = Parsec Void String
 
-parse :: String -> Either (ParseErrorBundle String Void) Term
-parse = Text.Megaparsec.parse (parseTerm <* eof) ""
+parse :: String -> Either (ParseErrorBundle String Void) TypeInference
+parse = Text.Megaparsec.parse (parseTypeInference <* eof) ""
+
+parseTypeInference :: Parser TypeInference
+parseTypeInference = do
+  C.space
+  ctx <- parseContext
+  string "|-"
+  term <- parseTerm
+  char ':'
+  t <- parseType
+  return (ctx, term, t)
 
 char :: Char -> Parser ()
 char c = void $ symbol C.space [c]
@@ -53,6 +65,16 @@ parseType =
             ]
         )
         (string "->")
+
+parseContext :: Parser Context
+parseContext =
+  sepBy
+    ( do
+        x <- parseVariable
+        char ':'
+        (x,) <$> parseType
+    )
+    (char ',')
 
 parseVariable :: Parser String
 parseVariable =
