@@ -8,6 +8,7 @@ import Data.Void
 import Text.Megaparsec
 import qualified Text.Megaparsec.Char as C
 import Text.Megaparsec.Char.Lexer (symbol)
+import Data.Map (fromList)
 
 type Parser = Parsec Void String
 
@@ -68,7 +69,7 @@ parseType =
 
 parseContext :: Parser Context
 parseContext =
-  sepBy
+  fromList <$> sepBy
     ( do
         x <- parseVariable
         char ':'

@@ -1,8 +1,10 @@
 module Base where
 
+import Data.Map
+
 type Var = String
 type TypeVar = String
-type Context = [(Var, Type)]
+type Context = Map Var Type
 type TypeInference = (Context, Term, Type)
 
 infixl 4 :@
