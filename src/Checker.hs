@@ -51,13 +51,13 @@ unification (ctx, (t1, t2@(T _)) : eqs) =
   if t1 == t2
     then unification (ctx, eqs)
     else unification (ctx, (t2, t1) : eqs)
-unification (ctx, (T x, t2) : eqs) =
-  if containsX x t2
+unification (ctx, (t1@(T x), t2) : eqs) =
+  if t1 /= t2 && containsX x t2
     then Left $ "occurs check: " ++ x ++ " = " ++ show t2
     else unification (M.insert x t2 ctx, map (bimap (subst x t2) (subst x t2)) eqs)
 unification (ctx, (t1 :=> t2, t1' :=> t2') : eqs) = unification (ctx, (t1, t1') : (t2, t2') : eqs)
 
 check :: TypeInference -> Either String Context
-check (ctx, term, expectedType) = 
+check (ctx, term, usersType) =
   let (actualType, (ctx', (eqs, _))) = runState (typeEquations term) (ctx, ([], (S.fromAscList $ M.elems ctx, 0))) in
-    unification (ctx', (expectedType, actualType) : eqs)
+    unification (ctx', (usersType, actualType) : eqs)
