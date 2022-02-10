@@ -25,13 +25,15 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Base
+      Parser
   other-modules:
       Paths_lambda_calculus_type_checker
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , megaparsec
   default-language: Haskell2010
 
 executable lambda-calculus-type-checker-exe
@@ -44,6 +46,7 @@ executable lambda-calculus-type-checker-exe
   build-depends:
       base >=4.7 && <5
     , lambda-calculus-type-checker
+    , megaparsec
   default-language: Haskell2010
 
 test-suite lambda-calculus-type-checker-test
@@ -57,4 +60,5 @@ test-suite lambda-calculus-type-checker-test
   build-depends:
       base >=4.7 && <5
     , lambda-calculus-type-checker
+    , megaparsec
   default-language: Haskell2010
