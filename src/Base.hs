@@ -6,7 +6,6 @@ type Context = [(Var, Type)]
 type TypeInference = (Context, Term, Type)
 
 infixl 4 :@
-infixl 4 :@:
 infixr 4 :=>
 
 data Type
@@ -17,6 +16,5 @@ data Type
 data Term
   = V Var
   | Term :@ Term
-  | Term :@: Type
   | L Var Type Term
   deriving (Ord, Eq, Show)
