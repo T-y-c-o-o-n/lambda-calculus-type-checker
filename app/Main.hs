@@ -1,6 +1,11 @@
 module Main where
 
-import Lib
+import Parser
+import Text.Megaparsec (errorBundlePretty)
 
 main :: IO ()
-main = someFunc
+main = do
+  input <- getLine
+  case parse input of
+    Left e -> putStrLn $ errorBundlePretty e
+    Right t -> putStrLn "Correct"
