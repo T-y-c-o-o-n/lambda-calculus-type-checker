@@ -54,7 +54,7 @@ parseType =
         )
         (string "->")
 
-parseVariable :: Parser Var
+parseVariable :: Parser String
 parseVariable =
   do
     c <- C.lowerChar
