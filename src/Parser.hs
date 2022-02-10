@@ -56,7 +56,7 @@ parseType :: Parser Type
 parseType =
   do
     C.space
-    foldl1 (:=>)
+    foldr1 (:=>)
       <$> sepBy
         ( choice
             [ T <$> parseVariable,
