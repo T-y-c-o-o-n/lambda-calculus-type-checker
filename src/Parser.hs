@@ -36,7 +36,7 @@ parseTerm =
   do
     C.space
     foldl1 (:@)
-      <$> many
+      <$> some
         ( choice
             [ V <$> parseVariable,
               do
