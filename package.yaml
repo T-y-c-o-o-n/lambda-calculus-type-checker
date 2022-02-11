@@ -24,6 +24,8 @@ dependencies:
 - megaparsec
 - containers
 - mtl
+- tasty
+- tasty-hspec
 
 library:
   source-dirs: src
