@@ -22,7 +22,12 @@ generateNewType = do
 typeEquations :: Term -> State (Context, ([(Type, Type)], (S.Set TypeVar, (S.Set TypeVar, Int)))) Type
 typeEquations (V x) = do
   (ctx, _) <- get
-  maybe generateNewType return (M.lookup x ctx)
+  case M.lookup x ctx of
+    Nothing -> do
+      t <- generateNewType
+      modify $ first $ M.insert x t
+      return t
+    Just t -> return t
 typeEquations (e :@ f) = do
   tE <- typeEquations e
   tF <- typeEquations f
@@ -74,10 +79,3 @@ check :: TypeInference -> Either String Context
 check (ctx, term, usersType) =
   let (actualType, (ctx', (eqs, (_, (unknown, _))))) = runState (typeEquations term) (ctx, ([], (findAllTypeNamesFromContext ctx `S.union` findAllTypeNames usersType, (S.empty, 0))))
    in unification unknown (ctx', (usersType, actualType) : eqs)
-
---f :: a -> b -> c
---f x y = y x
-
---   in Left ("usersType: " ++ show usersType ++ "; actualType: " ++ show actualType ++ "; ctx: " ++ show ctx ++ "; eqs: " ++ show eqs ++ "; unknown: " ++ show unknown)
--- f : beta |- \x: alpha. f (f (f x) ) : alpha -> alpha
--- |- \f: a0. \x: a1. f x : a0 -> a1 -> a2
