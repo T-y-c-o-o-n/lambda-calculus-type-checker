@@ -1,11 +1,11 @@
 module Test.Checker where
 
 import Base
-import Data.Map
 import Checker
+import Data.Either (isLeft)
+import Data.Map
 import Test.Tasty
 import Test.Tasty.Hspec
-import Data.Either (isLeft)
 
 hspecChecker :: IO TestTree
 hspecChecker = testSpec "Checker" $ do
