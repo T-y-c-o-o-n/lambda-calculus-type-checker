@@ -1,34 +1,36 @@
 module Test.Parser where
 
+import Base
+import Data.Either (isLeft)
+import Parser
 import Test.Tasty
 import Test.Tasty.Hspec
-import Base
-import Parser
 import Text.Megaparsec
-import Data.Either (isLeft)
 
 hspecParser :: IO TestTree
-hspecParser = testSpec "Parser" spec_Parser
+hspecParser = testSpec "Parser" $ do
+  spec_parseTerm
+  spec_parseVariable
 
-spec_Parser :: Spec
-spec_Parser = do
-  describe "parseTerm" $ do
+spec_parseVariable :: Spec
+spec_parseVariable = do
+  describe "parseVariable" $ do
     it "variable 1" $
-      runParser parseTerm "" "a" `shouldBe` Right (V "a")
+      runParser parseVariable "" "a" `shouldBe` Right "a"
     it "variable 2" $
-      runParser parseTerm "" "beta" `shouldBe` Right (V "beta")
+      runParser parseVariable "" "beta" `shouldBe` Right "beta"
     it "variable 3" $
-      runParser parseTerm "" "zeta123123" `shouldBe` Right (V "zeta123123")
+      runParser parseVariable "" "zeta123123" `shouldBe` Right "zeta123123"
     it "variable 4" $
-      runParser parseTerm "" "hamma00000lambda" `shouldBe` Right (V "hamma00000lambda")
+      runParser parseVariable "" "hamma00000lambda" `shouldBe` Right "hamma00000lambda"
     it "variable 5" $
-      runParser parseTerm "" "  ccc   " `shouldBe` Right (V "ccc")
+      runParser parseVariable "" "  ccc   " `shouldBe` Right "ccc"
     it "variable 6" $
-      runParser parseTerm "" "qwerty   " `shouldBe` Right (V "qwerty")
+      runParser parseVariable "" "qwerty   " `shouldBe` Right "qwerty"
     it "variable 7" $
-      runParser parseTerm "" "    rrr45" `shouldBe` Right (V "rrr45")
+      runParser parseVariable "" "    rrr45" `shouldBe` Right "rrr45"
     it "variable 8" $
-      runParser parseTerm "" "  hamma00000lambda  " `shouldBe` Right (V "hamma00000lambda")
+      runParser parseVariable "" "  hamma00000lambda  " `shouldBe` Right "hamma00000lambda"
     it "incorrect variable 1" $
       runParser parseTerm "" "123" `shouldSatisfy` isLeft
     it "incorrect variable 2" $
@@ -37,6 +39,10 @@ spec_Parser = do
       runParser parseTerm "" "    23zeta123123" `shouldSatisfy` isLeft
     it "incorrect variable 4" $
       runParser parseTerm "" "  9999hamma00000lambda  " `shouldSatisfy` isLeft
+
+spec_parseTerm :: Spec
+spec_parseTerm = do
+  describe "parseTerm" $ do
     it "var application 1" $
       runParser parseTerm "" " x y " `shouldBe` Right (V "x" :@ V "y")
     it "var application 2" $
@@ -59,4 +65,4 @@ spec_Parser = do
       runParser parseTerm "" " \\ f : alpha -> alpha . \\ x : alpha . f ( f ( f x ) )" `shouldBe` Right (L "f" (T "alpha" :=> T "alpha") (L "x" (T "alpha") (V "f" :@ (V "f" :@ (V "f" :@ V "x")))))
     it "combo 3" $
       runParser parseTerm "" " (\\ x : a . x) (\\y : c -> b . y ( \\ z : c . z ))  " `shouldBe` Right (L "x" (T "a") (V "x") :@ L "y" (T "c" :=> T "b") (V "y" :@ L "z" (T "c") (V "z")))
-      
+--  describe "parseType" $ do

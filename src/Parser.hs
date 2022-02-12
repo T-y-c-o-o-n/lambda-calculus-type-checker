@@ -80,6 +80,7 @@ parseContext =
 parseVariable :: Parser String
 parseVariable =
   do
+    C.space
     c <- C.lowerChar
     s <- many (C.lowerChar <|> C.digitChar <|> C.char '\'')
     C.space
