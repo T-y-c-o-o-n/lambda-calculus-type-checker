@@ -15,6 +15,12 @@ type Parser = Parsec Void String
 parse :: String -> Either (ParseErrorBundle String Void) TypeInference
 parse = Text.Megaparsec.parse (parseTypeInference <* eof) ""
 
+char :: Char -> Parser ()
+char c = void $ symbol C.space [c]
+
+string :: String -> Parser ()
+string = void . symbol C.space
+
 parseTypeInference :: Parser TypeInference
 parseTypeInference = do
   C.space
@@ -25,11 +31,15 @@ parseTypeInference = do
   t <- parseType
   return (ctx, term, t)
 
-char :: Char -> Parser ()
-char c = void $ symbol C.space [c]
-
-string :: String -> Parser ()
-string = void . symbol C.space
+parseContext :: Parser Context
+parseContext =
+  fromList <$> sepBy
+    ( do
+        x <- parseVariable
+        char ':'
+        (x,) <$> parseType
+    )
+    (char ',')
 
 parseTerm :: Parser Term
 parseTerm =
@@ -66,16 +76,6 @@ parseType =
             ]
         )
         (string "->")
-
-parseContext :: Parser Context
-parseContext =
-  fromList <$> sepBy
-    ( do
-        x <- parseVariable
-        char ':'
-        (x,) <$> parseType
-    )
-    (char ',')
 
 parseVariable :: Parser String
 parseVariable =
