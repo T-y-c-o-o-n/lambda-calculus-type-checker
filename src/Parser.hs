@@ -32,7 +32,8 @@ parseTypeInference = do
   return (ctx, term, t)
 
 parseContext :: Parser Context
-parseContext =
+parseContext = do
+  C.space
   fromList <$> sepBy
     ( do
         x <- parseVariable
@@ -67,7 +68,7 @@ parseType =
   do
     C.space
     foldr1 (:=>)
-      <$> sepBy
+      <$> sepBy1
         ( choice
             [ T <$> parseVariable,
               do
