@@ -28,5 +28,6 @@ data Term
 
 instance Show Term where
   show (V x) = x
-  show (t1 :@ t2) = show t1 ++ " " ++ show t2
+  show (t1 :@ t2@(V _)) = show t1 ++ " " ++ show t2
+  show (t1 :@ t2) = show t1 ++ " (" ++ show t2 ++ ")"
   show (L x t term) = "\\" ++ x ++ ": " ++ show t ++ ". " ++ show term
