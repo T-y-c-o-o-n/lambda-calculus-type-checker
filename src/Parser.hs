@@ -4,6 +4,7 @@ module Parser where
 
 import Base
 import Control.Monad (void)
+import Data.Functor
 import Data.Map (fromList)
 import Data.Void
 import Text.Megaparsec
@@ -72,31 +73,6 @@ parseContext = do
       )
       (char ',')
 
-parseTerm :: Parser Term
-parseTerm =
-  do
-    C.space
-
-    foldl1 (:@)
-      <$> some
-        ( choice
-            [ V <$> parseVariable,
-              between (char '(') (char ')') parseTerm,
-              do
-                char '\\'
-                x <- parseVariable
-                char ':'
-                t <- parseType
-                char '.'
-                L x t <$> parseTerm,
-              do
-                string "/\\"
-                a <- parseVariable
-                char '.'
-                LL a <$> parseTerm
-            ]
-        )
-
 parseType :: Parser Type
 parseType =
   do
@@ -105,10 +81,63 @@ parseType =
       <$> sepBy1
         ( choice
             [ T <$> parseVariable,
-              between (char '(') (char ')') parseType
+              between (char '(') (char ')') parseType,
+              do
+                char '@'
+                a <- parseVariable
+                char '.'
+                ForAll a <$> parseType
             ]
         )
         (string "->")
+
+parseLambda :: Parser Term
+parseLambda =
+  choice
+    [ do
+        char '\\'
+        x <- parseVariable
+        char ':'
+        t <- parseType
+        char '.'
+        L x t <$> parseTerm,
+      do
+        string "/\\"
+        a <- parseVariable
+        char '.'
+        LL a <$> parseTerm
+    ]
+
+parseTerm :: Parser Term
+parseTerm =
+  do
+    maybeTerm <- optional parseApplication
+    case maybeTerm of
+      Nothing -> parseLambda
+      Just term -> foldl (:@) term <$> optional parseLambda
+
+parseApplication :: Parser Term
+parseApplication = parserAtom >>= parseApplication'
+
+parseApplication' :: Term -> Parser Term
+parseApplication' term =
+  choice
+    [ do
+        atom <- parserAtom
+        parseApplication' (term :@ atom),
+      do
+        char '!'
+        t <- parseType
+        parseApplication' (term :@. t),
+      return term
+    ]
+
+parserAtom :: Parser Term
+parserAtom =
+  choice
+    [ V <$> parseVariable,
+      between (char '(') (char ')') parseTerm
+    ]
 
 parseVariable :: Parser String
 parseVariable =
