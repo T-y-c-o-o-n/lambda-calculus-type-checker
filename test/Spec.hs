@@ -10,3 +10,4 @@ tests = do
 
 main :: IO ()
 main = tests >>= defaultMain
+
