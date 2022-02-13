@@ -76,7 +76,6 @@ spec_parseTerm = do
     it "type lambda 2" $
       runParser parseTerm "" " /\\a. /\\b. /\\c. x " `shouldBe` Right (LL "a" (LL "b" (LL "c" (V "x"))))
 
--- | - /\a. \x: a. x : @a. a -> a
 spec_parseType :: Spec
 spec_parseType = do
   describe "parseType" $ do
