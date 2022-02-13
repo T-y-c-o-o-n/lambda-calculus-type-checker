@@ -4,11 +4,11 @@ module Parser where
 
 import Base
 import Control.Monad (void)
+import Data.Map (fromList)
 import Data.Void
 import Text.Megaparsec
 import qualified Text.Megaparsec.Char as C
 import Text.Megaparsec.Char.Lexer (symbol)
-import Data.Map (fromList)
 
 type Parser = Parsec Void String
 
@@ -20,6 +20,35 @@ char c = void $ symbol C.space [c]
 
 string :: String -> Parser ()
 string = void . symbol C.space
+
+{-
+Grammar:
+
+<type> ::= <type-atom>
+       | <type-atom> -> <type>
+       | @ <variable> . <type>
+
+<type-atom> ::= <variable>
+              | ( type )
+
+<term> ::= [<application>] \ <variable> : <type> . <term>
+         | [<application>] /\ <variable> . <term>
+         | <application>
+
+<application> ::= <atom>
+                | <application> <atom>
+                | <application> ! <type>
+
+("!" is to differ term application and type application,
+ otherwise even "x y" will be ambiguous:
+  "term x applied to term y" or "term x applied to type y"?)
+
+<atom> ::= <variable>
+         | ( <term> )
+
+<variable> ::= [a-z] [a-z0-9']*
+
+-}
 
 parseTypeInference :: Parser TypeInference
 parseTypeInference = do
@@ -34,32 +63,37 @@ parseTypeInference = do
 parseContext :: Parser Context
 parseContext = do
   C.space
-  fromList <$> sepBy
-    ( do
-        x <- parseVariable
-        char ':'
-        (x,) <$> parseType
-    )
-    (char ',')
+  fromList
+    <$> sepBy
+      ( do
+          x <- parseVariable
+          char ':'
+          (x,) <$> parseType
+      )
+      (char ',')
 
 parseTerm :: Parser Term
 parseTerm =
   do
     C.space
+
     foldl1 (:@)
       <$> some
         ( choice
             [ V <$> parseVariable,
-              do
-                char '('
-                parseTerm <* char ')',
+              between (char '(') (char ')') parseTerm,
               do
                 char '\\'
                 x <- parseVariable
                 char ':'
                 t <- parseType
                 char '.'
-                L x t <$> parseTerm
+                L x t <$> parseTerm,
+              do
+                string "/\\"
+                a <- parseVariable
+                char '.'
+                LL a <$> parseTerm
             ]
         )
 
@@ -71,9 +105,7 @@ parseType =
       <$> sepBy1
         ( choice
             [ T <$> parseVariable,
-              do
-                char '('
-                parseType <* char ')'
+              between (char '(') (char ')') parseType
             ]
         )
         (string "->")
