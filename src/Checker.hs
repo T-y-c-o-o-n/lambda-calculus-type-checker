@@ -88,7 +88,9 @@ findAllTypeNames (ForAll _ t) = findAllTypeNames t
 findAllTypeNamesFromContext :: Context -> S.Set TypeVar
 findAllTypeNamesFromContext ctx = foldl S.union S.empty $ map findAllTypeNames $ M.elems ctx
 
-check :: TypeInference -> Either String Context
+check :: TypeInference -> Either (Type, String) Context
 check (ctx, term, usersType) =
   let (actualType, (ctx', (eqs, (_, (unknown, _))))) = runState (typeEquations term) (ctx, ([], (findAllTypeNamesFromContext ctx `S.union` findAllTypeNames usersType, (S.empty, 0))))
-   in unification unknown (ctx', (usersType, actualType) : eqs)
+   in case unification unknown (ctx', (usersType, actualType) : eqs) of
+     Left e -> Left (actualType, e)
+     Right ctx -> Right ctx

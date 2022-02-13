@@ -10,5 +10,5 @@ main = do
   case parse input of
     Left e -> putStrLn $ errorBundlePretty e
     Right ti -> case check ti of
-      Left e -> putStrLn e
+      Left (actualType, e) -> putStrLn $ "error: \"" ++ e ++ "\"; actual type is " ++ show actualType
       Right _ -> putStrLn "Correct!"
