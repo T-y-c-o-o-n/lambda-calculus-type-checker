@@ -28,21 +28,23 @@ spec_parseVariable = do
     it "variable 4" $
       runParser parseVariable "" "hamma00000lambda" `shouldBe` Right "hamma00000lambda"
     it "variable 5" $
-      runParser parseVariable "" "  ccc   " `shouldBe` Right "ccc"
+      runParser parseVariable "" "ccc   " `shouldBe` Right "ccc"
     it "variable 6" $
       runParser parseVariable "" "qwerty   " `shouldBe` Right "qwerty"
     it "variable 7" $
-      runParser parseVariable "" "    rrr45" `shouldBe` Right "rrr45"
+      runParser parseVariable "" "rrr45" `shouldBe` Right "rrr45"
     it "variable 8" $
-      runParser parseVariable "" "  hamma00000lambda  " `shouldBe` Right "hamma00000lambda"
+      runParser parseVariable "" "hamma00000lambda  " `shouldBe` Right "hamma00000lambda"
     it "incorrect variable 1" $
-      runParser parseTerm "" "123" `shouldSatisfy` isLeft
+      runParser parseVariable "" "123" `shouldSatisfy` isLeft
     it "incorrect variable 2" $
-      runParser parseTerm "" "0beta   " `shouldSatisfy` isLeft
+      runParser parseVariable "" "0beta   " `shouldSatisfy` isLeft
     it "incorrect variable 3" $
-      runParser parseTerm "" "    23zeta123123" `shouldSatisfy` isLeft
+      runParser parseVariable "" "23zeta123123" `shouldSatisfy` isLeft
     it "incorrect variable 4" $
-      runParser parseTerm "" "  9999hamma00000lambda  " `shouldSatisfy` isLeft
+      runParser parseVariable "" "9999hamma00000lambda  " `shouldSatisfy` isLeft
+    it "incorrect variable 4" $
+      runParser parseVariable "" "  var'after'spaces" `shouldSatisfy` isLeft
 
 spec_parseTerm :: Spec
 spec_parseTerm = do
@@ -69,7 +71,12 @@ spec_parseTerm = do
       runParser parseTerm "" " \\ f : alpha -> alpha . \\ x : alpha . f ( f ( f x ) )" `shouldBe` Right (L "f" (T "alpha" :=> T "alpha") (L "x" (T "alpha") (V "f" :@ (V "f" :@ (V "f" :@ V "x")))))
     it "combo 3" $
       runParser parseTerm "" " (\\ x : a . x) (\\y : c -> b . y ( \\ z : c . z ))  " `shouldBe` Right (L "x" (T "a") (V "x") :@ L "y" (T "c" :=> T "b") (V "y" :@ L "z" (T "c") (V "z")))
+    it "type lambda 1" $
+      runParser parseTerm "" " /\\a. \\x: a. x " `shouldBe` Right (LL "a" (L "x" (T "a") (V "x")))
+    it "type lambda 2" $
+      runParser parseTerm "" " /\\a. /\\b. /\\c. x " `shouldBe` Right (LL "a" (LL "b" (LL "c" (V "x"))))
 
+-- | - /\a. \x: a. x : @a. a -> a
 spec_parseType :: Spec
 spec_parseType = do
   describe "parseType" $ do

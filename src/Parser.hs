@@ -3,7 +3,6 @@
 module Parser where
 
 import Base
-import Control.Monad (void)
 import Data.Functor
 import Data.Map (fromList)
 import Data.Void
@@ -111,6 +110,7 @@ parseLambda =
 parseTerm :: Parser Term
 parseTerm =
   do
+    C.space
     maybeTerm <- optional parseApplication
     case maybeTerm of
       Nothing -> parseLambda
@@ -134,15 +134,15 @@ parseApplication' term =
 
 parserAtom :: Parser Term
 parserAtom =
-  choice
-    [ V <$> parseVariable,
-      between (char '(') (char ')') parseTerm
-    ]
+  do
+    choice
+      [ V <$> parseVariable,
+        between (char '(') (char ')') parseTerm
+      ]
 
 parseVariable :: Parser String
 parseVariable =
   do
-    C.space
     c <- C.lowerChar
     s <- many (C.lowerChar <|> C.digitChar <|> C.char '\'')
     C.space
