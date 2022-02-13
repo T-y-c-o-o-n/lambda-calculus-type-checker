@@ -42,24 +42,34 @@ typeEquations (L x t e) = do
     Nothing -> modify $ first $ M.delete x
     Just tX -> modify $ first $ M.insert x tX
   return (t :=> tE)
+typeEquations (e :@. t) = do
+  tE <- typeEquations e
+  t' <- generateNewType
+  modify $ second $ first ((tE, t :=> t') :)
+  return t'
+typeEquations (LL a e) = do
+  tE <- typeEquations e
+  return $ ForAll a tE
 
 subst :: TypeVar -> Type -> Type -> Type
 subst a t other@(T b) = if a == b then t else other
 subst a t (t1 :=> t2) = subst a t t1 :=> subst a t t2
+subst a t other@(ForAll b t') = if a == b then other else ForAll b $ subst a t t'
 
-containsX :: TypeVar -> Type -> Bool
-containsX x (T y) = x == y
-containsX x (t1 :=> t2) = containsX x t1 || containsX x t2
+containsTypeVar :: TypeVar -> Type -> Bool
+containsTypeVar a (T y) = a == y
+containsTypeVar a (t1 :=> t2) = containsTypeVar a t1 || containsTypeVar a t2
+containsTypeVar a (ForAll b t) = a /= b && containsTypeVar a t
 
 unification :: S.Set TypeVar -> (Context, [(Type, Type)]) -> Either String Context
-unification unknown (ctx, []) = Right ctx
+unification _ (ctx, []) = Right ctx
 unification unknown (ctx, (t1@(T a), t2@(T b)) : eqs)
   | a == b = unification unknown (ctx, eqs)
   | a `S.member` unknown = unification unknown (ctx, map (bimap (subst a t2) (subst a t2)) eqs)
   | b `S.member` unknown = unification unknown (ctx, (t2, t1) : eqs)
   | otherwise = Left $ "Couldn't match expected type " ++ b ++ " with actual type " ++ a
 unification unknown (ctx, (T a, t2) : eqs)
-  | containsX a t2 = Left $ "Occurs check: " ++ a ++ " = " ++ show t2
+  | containsTypeVar a t2 = Left $ "Occurs check: " ++ a ++ " = " ++ show t2
   | a `S.notMember` unknown = Left $ "Couldn't match expected type " ++ show t2 ++ " with actual type " ++ a
   | otherwise = unification unknown (M.insert a t2 ctx, map (bimap (subst a t2) (subst a t2)) eqs)
 unification unknown (ctx, (t1, t2@(T _)) : eqs) =
@@ -67,10 +77,13 @@ unification unknown (ctx, (t1, t2@(T _)) : eqs) =
     then unification unknown (ctx, eqs)
     else unification unknown (ctx, (t2, t1) : eqs)
 unification unknown (ctx, (t1 :=> t2, t1' :=> t2') : eqs) = unification unknown (ctx, (t1, t1') : (t2, t2') : eqs)
+unification unknown (ctx, (ForAll a t, ForAll b t') : eqs) = unification unknown (ctx, (T a, T b) : (t, t') : eqs)
+unification _ (_, (t, t') : _) = Left $ "Cannot match " ++ show t ++ " with " ++ show t'
 
 findAllTypeNames :: Type -> S.Set TypeVar
 findAllTypeNames (T a) = S.singleton a
 findAllTypeNames (t1 :=> t2) = S.union (findAllTypeNames t1) (findAllTypeNames t2)
+findAllTypeNames (ForAll _ t) = findAllTypeNames t
 
 findAllTypeNamesFromContext :: Context -> S.Set TypeVar
 findAllTypeNamesFromContext ctx = foldl S.union S.empty $ map findAllTypeNames $ M.elems ctx
