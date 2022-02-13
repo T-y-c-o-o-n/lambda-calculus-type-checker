@@ -17,7 +17,7 @@ spec_check = do
     it "simple 1" $
       check (Data.Map.empty, V "x", T "a") `shouldBe` Right (fromList [("x", T "a0")])
     it "simple 2" $
-      check (Data.Map.empty, V "x", T "a -> b") `shouldBe` Right (fromList [("x", T "a0")])
+      check (Data.Map.empty, V "x", T "a") `shouldBe` Right (fromList [("x", T "a0")])
     it "incorrect 1" $
       check (Data.Map.empty, L "f" (T "a0") (L "x" (T "a1") (V "f" :@ V "x")), T "a0" :=> T "a1" :=> T "a2") `shouldSatisfy` isLeft
     it "incorrect 2" $
