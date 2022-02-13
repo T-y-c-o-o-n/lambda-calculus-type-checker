@@ -24,6 +24,10 @@ string = void . symbol C.space
 {-
 Grammar:
 
+<type inference> ::= <context> |- <term> : <type>
+
+<context> ::= [<variable> : <type> [, <variable> : <type>]*]
+
 <type> ::= <type-atom>
        | <type-atom> -> <type>
        | @ <variable> . <type>
@@ -47,7 +51,6 @@ Grammar:
          | ( <term> )
 
 <variable> ::= [a-z] [a-z0-9']*
-
 -}
 
 parseTypeInference :: Parser TypeInference
