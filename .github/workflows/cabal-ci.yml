@@ -32,7 +32,7 @@ jobs:
 
     - name: Build
       run: |
-        stack init
+        stack init --force
         stack build
     - name: Run tests
       run: stack test
