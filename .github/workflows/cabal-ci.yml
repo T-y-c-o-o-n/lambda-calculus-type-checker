@@ -30,7 +30,6 @@ jobs:
           ${{ runner.os }}-build-
           ${{ runner.os }}-
 
-    - name: Install dependencies
     - name: Build
       run: |
         stack init
