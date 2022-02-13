@@ -3,11 +3,15 @@ module Base where
 import Data.Map
 
 type Var = String
+
 type TypeVar = String
+
 type Context = Map Var Type
+
 type TypeInference = (Context, Term, Type)
 
 infixl 4 :@
+
 infixr 4 :=>
 
 data Type

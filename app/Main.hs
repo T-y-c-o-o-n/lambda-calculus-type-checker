@@ -1,7 +1,7 @@
 module Main where
 
-import Parser
 import Checker
+import Parser
 import Text.Megaparsec (errorBundlePretty)
 
 main :: IO ()

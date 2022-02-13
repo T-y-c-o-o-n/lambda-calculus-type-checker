@@ -1,6 +1,6 @@
-import Test.Parser (hspecParser)
 import Test.Checker (hspecChecker)
-import Test.Tasty (defaultMain, TestTree, testGroup)
+import Test.Parser (hspecParser)
+import Test.Tasty (TestTree, defaultMain, testGroup)
 
 tests :: IO TestTree
 tests = do
