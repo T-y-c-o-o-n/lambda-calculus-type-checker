@@ -54,8 +54,9 @@ typeEquations (L x t e) = do
 typeEquations (e :@. t) = do
   tE <- typeEquations e
   a <- generateNewTypeVar
-  modify $ second $ first ((tE, t :=> T a) :)
-  return $ T a
+  b <- generateNewTypeVar
+  modify $ second $ first $ \eqs -> (tE, ForAll a (T b)) : (T a, t) : eqs
+  return $ T b
 typeEquations (LL a e) = do
   tE <- typeEquations e
   return $ ForAll a tE

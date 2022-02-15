@@ -10,8 +10,8 @@ type Context = Map Var Type
 
 type TypeInference = (Context, Term, Type)
 
+infixl 3 :@.
 infixl 4 :@
-
 infixr 4 :=>
 
 data Type
@@ -40,4 +40,4 @@ instance Show Term where
   show (t1 :@ t2) = show t1 ++ " (" ++ show t2 ++ ")"
   show (L x t term) = "\\" ++ x ++ ": " ++ show t ++ ". " ++ show term
   show (LL a term) = "/\\" ++ a ++ ". " ++ show term
-  show (term :@. t) = show term ++ " (" ++ show t ++ ")"
+  show (term :@. t) = show term ++ " !" ++ show t
