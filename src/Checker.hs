@@ -6,7 +6,11 @@ import Data.Bifunctor (bimap, first, second)
 import qualified Data.Map as M
 import qualified Data.Set as S
 
-generateNewType :: State (Context, ([(Type, Type)], (S.Set TypeVar, (S.Set TypeVar, Int)))) Type
+type AllVarsSet = S.Set TypeVar
+type UnknownVarsSet = S.Set TypeVar
+type Equations = [(Type, Type)]
+
+generateNewType :: State (Context, (Equations, (AllVarsSet, (UnknownVarsSet, Int)))) Type
 generateNewType = do
   (ctx, (eqs, (typeVars, (unknown, i)))) <- get
   let name = "a" ++ show i
@@ -19,7 +23,7 @@ generateNewType = do
               put (ctx, (eqs, (name `S.insert` typeVars, (name `S.insert` unknown, i + 1))))
               return newType
 
-typeEquations :: Term -> State (Context, ([(Type, Type)], (S.Set TypeVar, (S.Set TypeVar, Int)))) Type
+typeEquations :: Term -> State (Context, (Equations, (AllVarsSet, (UnknownVarsSet, Int)))) Type
 typeEquations (V x) = do
   (ctx, _) <- get
   case M.lookup x ctx of
@@ -61,7 +65,7 @@ containsTypeVar a (T y) = a == y
 containsTypeVar a (t1 :=> t2) = containsTypeVar a t1 || containsTypeVar a t2
 containsTypeVar a (ForAll b t) = a /= b && containsTypeVar a t
 
-unification :: S.Set TypeVar -> (Context, [(Type, Type)]) -> Either String Context
+unification :: UnknownVarsSet -> (Context, Equations) -> Either String Context
 unification _ (ctx, []) = Right ctx
 unification unknown (ctx, (t1@(T a), t2@(T b)) : eqs)
   | a == b = unification unknown (ctx, eqs)
@@ -80,12 +84,12 @@ unification unknown (ctx, (t1 :=> t2, t1' :=> t2') : eqs) = unification unknown 
 unification unknown (ctx, (ForAll a t, ForAll b t') : eqs) = unification unknown (ctx, (T a, T b) : (t, t') : eqs)
 unification _ (_, (t, t') : _) = Left $ "Cannot match " ++ show t ++ " with " ++ show t'
 
-findAllTypeNames :: Type -> S.Set TypeVar
+findAllTypeNames :: Type -> AllVarsSet
 findAllTypeNames (T a) = S.singleton a
 findAllTypeNames (t1 :=> t2) = S.union (findAllTypeNames t1) (findAllTypeNames t2)
 findAllTypeNames (ForAll _ t) = findAllTypeNames t
 
-findAllTypeNamesFromContext :: Context -> S.Set TypeVar
+findAllTypeNamesFromContext :: Context -> AllVarsSet
 findAllTypeNamesFromContext ctx = foldl S.union S.empty $ map findAllTypeNames $ M.elems ctx
 
 check :: TypeInference -> Either (Type, String) Context
@@ -93,4 +97,4 @@ check (ctx, term, usersType) =
   let (actualType, (ctx', (eqs, (_, (unknown, _))))) = runState (typeEquations term) (ctx, ([], (findAllTypeNamesFromContext ctx `S.union` findAllTypeNames usersType, (S.empty, 0))))
    in case unification unknown (ctx', (usersType, actualType) : eqs) of
      Left e -> Left (actualType, e)
-     Right ctx -> Right ctx
+     Right c -> Right c
